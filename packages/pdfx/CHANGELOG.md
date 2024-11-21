@@ -1,3 +1,18 @@
+## 2.8.0
+
+* Added zoom scale customizable [pull#529](https://github.com/ScerIO/packages.flutter/pull/529)
+* Fixed web [pull#533](https://github.com/ScerIO/packages.flutter/pull/533)
+* Fixed avoid resetting to initialPage each view [pull#530](https://github.com/ScerIO/packages.flutter/pull/530)
+
+## 2.7.0
+
+* Fixed pageSnapping option [pull#435](https://github.com/ScerIO/packages.flutter/pull/435)
+* Migrated to package:web [pull#493](https://github.com/ScerIO/packages.flutter/pull/493)
+* Bumped device_info_plus dependency to ^10.0.1 [pull#487](https://github.com/ScerIO/packages.flutter/pull/487)
+* Adjusted default zoom parameters [pull#487](https://github.com/ScerIO/packages.flutter/pull/487)
+* Fixed memory leak (Web) [pull#484](https://github.com/ScerIO/packages.flutter/pull/484)
+* Upgrade dependencies
+
 ## 2.6.0
 
 * Flutter 3.16 compatibility

@@ -31,6 +31,8 @@ class PdfViewPinch extends StatefulWidget {
     ),
     this.scrollDirection = Axis.vertical,
     this.padding = 10,
+    this.minScale = 1.0,
+    this.maxScale = 20.0,
     this.backgroundDecoration = const BoxDecoration(
       color: Color.fromARGB(255, 250, 250, 250),
       boxShadow: [
@@ -46,6 +48,12 @@ class PdfViewPinch extends StatefulWidget {
 
   /// Padding for the every page.
   final double padding;
+
+  /// The minimum document zoom scale.
+  final double minScale;
+
+  /// The maximum document zoom scale.
+  final double maxScale;
 
   /// Page management
   final PdfControllerPinch controller;
@@ -91,6 +99,8 @@ class _PdfViewPinchState extends State<PdfViewPinch>
   bool _forceUpdatePagePreviews = true;
 
   double get _padding => widget.padding;
+  double get _minScale => widget.minScale;
+  double get _maxScale => widget.maxScale;
 
   @override
   void initState() {
@@ -266,7 +276,16 @@ class _PdfViewPinchState extends State<PdfViewPinch>
     if (_lastViewSize == null || _pages.isEmpty) {
       return;
     }
-    final m = _controller.value;
+
+    Matrix4? m;
+    final pendingInitialPage = _controller.pendingInitialPage;
+    bool shouldNotifyPageChanged = false;
+    if (pendingInitialPage != null) {
+      m = _controller.calculatePageFitMatrix(pageNumber: pendingInitialPage);
+      shouldNotifyPageChanged = true;
+    }
+    m ??= _controller.value;
+
     final r = m.row0[0];
     final exposed = Rect.fromLTWH(
         -m.row0[3], -m.row1[3], _lastViewSize!.width, _lastViewSize!.height);
@@ -303,6 +322,11 @@ class _PdfViewPinchState extends State<PdfViewPinch>
       _needPagePreviewGeneration();
     } else {
       _needRealSizeOverlayUpdate();
+    }
+
+    if (shouldNotifyPageChanged && pendingInitialPage != null) {
+      widget.onPageChanged?.call(pendingInitialPage);
+      _controller.pageListenable.value = pendingInitialPage;
     }
   }
 
@@ -389,7 +413,7 @@ class _PdfViewPinchState extends State<PdfViewPinch>
     const fullPurgeDistThreshold = 33;
     const partialRemovalDistThreshold = 8;
 
-    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final dpr = View.of(context).devicePixelRatio;
     final m = _controller.value;
     final r = m.row0[0];
     final exposed = Rect.fromLTWH(
@@ -533,9 +557,11 @@ class _PdfViewPinchState extends State<PdfViewPinch>
           scrollControls: InteractiveViewerScrollControls.scrollPans,
           constrained: false,
           alignPanAxis: false,
-          boundaryMargin: const EdgeInsets.all(double.infinity),
-          minScale: 0.25,
-          maxScale: 20,
+          boundaryMargin: _minScale < 1
+              ? const EdgeInsets.all(double.infinity)
+              : EdgeInsets.zero,
+          minScale: _minScale,
+          maxScale: _maxScale,
           panEnabled: true,
           scaleEnabled: true,
           child: SafeArea(
